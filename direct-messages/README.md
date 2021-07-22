@@ -76,6 +76,7 @@ Notes:
 ---
 
 
+
 ## Using `feed_id`
 
 It's safe to use `feed_id` anywhere in public (as these are already public).
@@ -96,6 +97,69 @@ var content = {
 
 
 ---
+
+## Mapping `group_dm_id` to a `recp_key`
+
+The purpose of a `group_dm_id` is for anyone to be able to send encrypted messages to the group,
+and for everyone in the group to be able to decrypt them.
+
+The following design is made so that the `recps` field is the same no matter who is sending the message.
+
+```javascript
+const request = {
+  type: 'post',
+  text: 'hello, my name is Cherese, can i join your group please?'
+  recps: [
+    '@D6YvQIFYo3lQhmNbEjoQc7sLiPcDJdzQqF/ye+QM09g=.dm25519', // group_dm_id
+    '@YjoQc7sLF/ye+QM09iPcDJdzQo3lQD6YvQIFhmNbEqg=.ed25519' // cherese's feedId
+  ]
+}
+```
+
+```javascript
+const reply = {
+  type: 'post',
+  text: 'hi cherese, tell us more about yourself'
+  recps: [
+    '@D6YvQIFYo3lQhmNbEjoQc7sLiPcDJdzQqF/ye+QM09g=.dm25519', // group_dm_id
+    '@YjoQc7sLF/ye+QM09iPcDJdzQo3lQD6YvQIFhmNbEqg=.ed25519' // cherese's feedId
+  ] // note: there are the same recps as the initial request message
+}
+```
+
+There are two cases:
+
+1. Message author is outside of the group
+2. Message author is in the group
+
+### 1. Message author is outside of the group
+
+In our example above, Cherese needs to be able to encrypt the message to her own `feedId` and the `group_dm_id`.
+
+Encrypting to her `feedId` is covered in an earlier section.
+
+Encrypting to the `group_dm_id` is done:
+
+- diff-hellman styles
+- the scheme is `envelope-dm-group`
+
+> the group will be able to decrypt this by using the private part of the `group_dm_id` with the public part of Chereses `feedId`
+
+### 2. Message author is in the group
+
+In our example above, a group member needs to be able to encrypt the message to Chereses `feedId` and `group_dm_id`.
+
+Encrypting to Chereses `feedId` is covered in an earlier section.
+
+Encrypting to the `group_dm_id` is done by using the group encryption key.
+
+> NOTE: because the `group_key` is used in a key slot, the `group_dm_id` has to be the first recipient
+
+> NOTE: i would be tempting to use the `group_key` instead of this `group_dm_id`, but the person who is outside the group (Cherese),
+> does not know how to encrypt something to that `group_key`.
+
+We could use the groupId as a recp if a public message was posted by the group, declaring its `group_dm_id`.
+This would require a lookup for that message, to know how to encrypt if you're outside of the group.
 
 ## Future
 

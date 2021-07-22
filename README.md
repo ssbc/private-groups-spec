@@ -31,6 +31,7 @@ private group id      | [a key-store](./group/group-id/README.md)          | "en
 another feedId        | [diff-hellman styles](./direct-messages/README.md) | "envelope-id-based-dm-converted-ed25519"
 your feedId           | [locally stored key](./direct-messages/README.md)  | "envelope-symmetric-key-for-self"
 published public key  | TODO                                               | ???
+dm id for a private group  | either diff-hellman or a key-store       | "envelope-dm-group"
 
 see `key-schemes.json` for the canonical list of accepted schema labels
 
